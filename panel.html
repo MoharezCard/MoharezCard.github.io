@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel</title>
+  <link rel="icon" href="./login.png">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;--surface:#0d1117;--surface2:#111820;
+  --border:#1a2435;--border2:#243040;
+  --accent:#38bdf8;--accent2:#6366f1;
+  --text:#e2e8f0;--muted:#4a5a72;--muted2:#6b7e96;
+  --green:#22c55e;--red:#ef4444;--orange:#f97316;
+  --sans:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(56,189,248,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;
+  background:radial-gradient(700px 700px at 90% -10%,rgba(56,189,248,.07) 0%,transparent 60%),
+             radial-gradient(500px 500px at -5% 100%,rgba(99,102,241,.08) 0%,transparent 60%);
+  pointer-events:none;z-index:0;}
+
+/* ── Login Screen ── */
+.login-screen{
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  background:var(--bg);
+}
+.login-screen.hidden{display:none;}
+.login-screen::before{
+  content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,var(--glow1) 0%,transparent 70%);
+  top:-100px;right:-100px;pointer-events:none;animation:orbFloat 8s ease-in-out infinite;
+}
+.login-screen::after{
+  content:'';position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,var(--glow2) 0%,transparent 70%);
+  bottom:-80px;left:-80px;pointer-events:none;animation:orbFloat 10s ease-in-out infinite reverse;
+}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
+
+.login-card{
+  position:relative;z-index:1;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:28px;
+  padding:44px 40px;width:100%;max-width:440px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25),0 4px 16px rgba(0,0,0,.1);
+  animation:loginRise .7s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes loginRise{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+
+/* Logo row: title left, icon right */
+.login-logo{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:14px;margin-bottom:36px;direction:ltr;
+}
+.login-logo-text{text-align:left;}
+.login-title{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--text);}
+.login-sub{font-family:var(--mono);font-size:10px;color:var(--muted2);letter-spacing:.12em;margin-top:3px;}
+.login-logo-icon{
+  width:58px;height:58px;border-radius:18px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(56,189,248,.35);
+  animation:iconPulse 3s ease-in-out infinite;
+}
+@keyframes iconPulse{0%,100%{box-shadow:0 8px 24px rgba(56,189,248,.35)}50%{box-shadow:0 8px 40px rgba(56,189,248,.55)}}
+.login-logo-icon svg{width:28px;height:28px;fill:#fff;}
+
+.login-label{
+  font-family:var(--mono);font-size:11px;color:var(--muted2);
+  letter-spacing:.1em;text-transform:uppercase;
+  display:block;margin-bottom:10px;text-align:right;
+}
+
+/* Password input */
+.login-input-wrap{position:relative;margin-bottom:20px;}
+.login-input{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1.5px solid var(--border2);border-radius:14px;
+  color:var(--text);font-family:var(--sans);font-size:15px;
+  padding:14px 18px 14px 54px;
+  outline:none;text-align:right;direction:rtl;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.login-input::placeholder{color:var(--muted);direction:rtl;}
+.login-input:focus{
+  border-color:var(--accent);
+  background:rgba(56,189,248,.04);
+  box-shadow:0 0 0 3px rgba(56,189,248,.1);
+}
+/* Eye button — inside left side */
+.login-eye{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  color:#94a3b8;padding:4px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s;
+}
+.login-eye:hover{color:var(--accent);}
+.login-eye svg{width:20px;height:20px;}
+
+.login-btn{
+  width:100%;padding:15px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-family:var(--sans);font-size:15px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 20px rgba(56,189,248,.35);
+  transition:transform .15s,box-shadow .15s,opacity .15s;
+  letter-spacing:.02em;
+}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(56,189,248,.45);}
+.login-btn:active{transform:translateY(0);opacity:.9;}
+.login-btn.loading{opacity:.7;cursor:not-allowed;transform:none;}
+
+.login-error{
+  background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.25);
+  color:#ef4444;border-radius:12px;padding:12px 16px;
+  font-size:13px;font-weight:500;margin-top:14px;
+  font-family:var(--mono);
+  display:none;align-items:center;gap:8px;direction:rtl;
+}
+.login-error.show{display:flex;animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* ── Main Layout ── */
+.layout{position:relative;z-index:1;display:flex;min-height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:260px;flex-shrink:0;background:var(--surface);
+  border-left:1px solid var(--border);padding:28px 20px;
+  display:flex;flex-direction:column;gap:6px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.brand-icon{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px rgba(56,189,248,.3);
+}
+.brand-icon svg{width:20px;height:20px;fill:#fff;}
+.brand-name{font-size:18px;font-weight:700;}
+.brand-sub{font-family:var(--mono);font-size:11px;color:var(--muted2);letter-spacing:.08em;margin-top:1px;}
+.nav-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;margin-top:12px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;cursor:pointer;color:var(--muted2);font-size:14px;font-weight:500;
+  transition:background .15s,color .15s;
+}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;}
+.nav-item:hover{background:rgba(255,255,255,.04);color:var(--text);}
+.nav-item.active{background:rgba(56,189,248,.1);color:var(--accent);border:1px solid rgba(56,189,248,.2);}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+.btn-logout{
+  width:100%;padding:9px;border-radius:8px;border:1px solid rgba(239,68,68,.2);
+  background:rgba(239,68,68,.06);color:var(--red);font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;
+}
+.btn-logout:hover{background:rgba(239,68,68,.12);}
+.version{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;}
+
+/* ── Main ── */
+.main{flex:1;padding:36px 40px;overflow-y:auto;}
+.page-header{margin-bottom:32px;}
+.page-title{font-size:26px;font-weight:800;letter-spacing:-.03em;}
+.page-sub{font-family:var(--mono);font-size:13px;color:var(--muted2);margin-top:6px;letter-spacing:.06em;}
+
+/* ── GitHub Config Banner ── */
+.config-banner{
+  background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);
+  border-radius:14px;padding:16px 20px;margin-bottom:20px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.config-banner svg{width:20px;height:20px;color:#818cf8;flex-shrink:0;margin-top:2px;}
+.config-banner-text{flex:1;}
+.config-banner-title{font-size:14px;font-weight:600;color:#818cf8;margin-bottom:4px;}
+.config-banner-sub{font-family:var(--mono);font-size:13px;color:var(--muted2);line-height:1.6;}
+.btn-config{
+  background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);
+  color:#818cf8;font-family:var(--sans);font-size:12px;font-weight:600;
+  padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;
+  transition:background .15s;margin-top:2px;
+}
+.btn-config:hover{background:rgba(99,102,241,.25);}
+
+/* ── Section ── */
+.section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;}
+.section-title{font-size:14px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;color:var(--text);}
+.section-title .icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.section-title .icon svg{width:16px;height:16px;}
+.ic-blue{background:rgba(56,189,248,.1);color:var(--accent);}
+.ic-purple{background:rgba(99,102,241,.1);color:#818cf8;}
+.ic-green{background:rgba(34,197,94,.1);color:var(--green);}
+.ic-pink{background:rgba(225,48,108,.1);color:#e91e8c;}
+.ic-orange{background:rgba(249,115,22,.1);color:var(--orange);}
+.ic-yellow{background:rgba(240,192,96,.1);color:#f0c060;}
+
+/* ── Form ── */
+.row{display:flex;gap:16px;margin-bottom:16px;}
+.row:last-child{margin-bottom:0;}
+.field{display:flex;flex-direction:column;gap:8px;flex:1;}
+.field.full{flex:none;width:100%;}
+label{font-family:var(--mono);font-size:13px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;}
+input,textarea,select{
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:var(--sans);font-size:14px;
+  padding:10px 14px;outline:none;transition:border-color .15s,background .15s;width:100%;
+}
+input:focus,textarea:focus,select:focus{border-color:rgba(56,189,248,.5);background:rgba(56,189,248,.04);}
+input::placeholder,textarea::placeholder{color:var(--muted);}
+textarea{resize:vertical;min-height:70px;}
+
+/* photo upload */
+.photo-upload{display:flex;align-items:center;gap:16px;}
+.photo-preview{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(255,255,255,.04);border:2px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;
+}
+.photo-preview img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.photo-preview svg{width:28px;height:28px;color:var(--muted);}
+.upload-btn{display:flex;flex-direction:column;gap:6px;}
+.upload-btn label{
+  cursor:pointer;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);
+  border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;
+  color:var(--accent);letter-spacing:.04em;text-transform:none;
+  transition:background .15s;display:inline-block;
+}
+.upload-btn label:hover{background:rgba(56,189,248,.15);}
+.upload-hint{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.05em;}
+.photo-remove{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+  color:var(--red);border-radius:8px;padding:6px 12px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  font-family:var(--sans);transition:background .15s;display:none;
+}
+.photo-remove:hover{background:rgba(239,68,68,.15);}
+
+/* music */
+.music-upload{
+  background:rgba(255,255,255,.02);border:1px dashed var(--border2);
+  border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;
+}
+.music-icon{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;
+  background:rgba(99,102,241,.1);color:#818cf8;
+  display:flex;align-items:center;justify-content:center;
+}
+.music-icon svg{width:20px;height:20px;}
+.music-info{flex:1;}
+.music-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+.music-meta{font-family:var(--mono);font-size:12px;color:var(--muted2);}
+.music-change label{
+  cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--accent);
+  letter-spacing:.05em;text-transform:uppercase;padding:6px 10px;
+  background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);
+  border-radius:6px;display:inline-block;transition:background .15s;
+}
+.music-change label:hover{background:rgba(56,189,248,.15);}
+.music-remove{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);
+  color:var(--red);border-radius:6px;padding:6px 10px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  font-family:var(--mono);transition:background .15s;display:none;margin-top:6px;
+}
+.music-remove:hover{background:rgba(239,68,68,.15);}
+
+/* social row */
+.social-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.social-row:last-child{margin-bottom:0;}
+.social-icon-wrap{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);
+}
+.social-icon-wrap svg{width:18px;height:18px;}
+.s-tg{background:rgba(41,182,246,.1);color:#29B6F6;}
+.s-ig{background:rgba(225,48,108,.1);color:#E91E8C;}
+.s-wa{background:rgba(37,211,102,.1);color:#25D366;}
+.s-gh{background:rgba(201,209,217,.08);color:#C9D1D9;}
+.s-li{background:rgba(10,102,194,.1);color:#0a66c2;}
+
+/* tags */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px;}
+.tag-chip{font-size:13px;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);
+  border-radius:100px;padding:5px 10px;
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+}
+.tag-chip button{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:14px;line-height:1;padding:0;}
+.tag-chip button:hover{color:var(--red);}
+.tag-add{display:flex;gap:8px;margin-top:8px;}
+.tag-add input{flex:1;}
+.tag-add-btn{
+  background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);
+  color:var(--accent);border-radius:8px;padding:8px 14px;
+  font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:background .15s;
+}
+.tag-add-btn:hover{background:rgba(56,189,248,.18);}
+
+/* toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:14px;font-weight:500;}
+.toggle-sub{font-family:var(--mono);font-size:12px;color:var(--muted2);margin-top:2px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;border-radius:100px;background:var(--border2);cursor:pointer;transition:background .2s;}
+.toggle input:checked + .toggle-track{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+.toggle-track::after{
+  content:'';position:absolute;width:18px;height:18px;
+  border-radius:50%;background:#fff;top:3px;right:3px;
+  transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.toggle input:checked + .toggle-track::after{transform:translateX(-20px);}
+
+/* ── Action Bar ── */
+.action-bar{
+  position:sticky;bottom:0;
+  background:rgba(6,9,15,.9);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:16px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;z-index:10;
+}
+.action-status{display:flex;align-items:center;gap:8px;}
+.action-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.action-dot.changed{background:var(--orange);box-shadow:0 0 8px rgba(249,115,22,.5);}
+.action-dot.saved{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.5);}
+.action-info{font-family:var(--mono);font-size:13px;color:var(--muted2);letter-spacing:.05em;}
+.action-btns{display:flex;gap:12px;}
+.btn-preview{
+  background:rgba(255,255,255,.05);border:1px solid var(--border2);
+  color:var(--text);font-family:var(--sans);font-size:14px;font-weight:600;
+  padding:10px 20px;border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;transition:background .15s,border-color .15s;
+}
+.btn-preview:hover{background:rgba(255,255,255,.08);}
+.btn-preview svg{width:16px;height:16px;}
+.btn-save-main{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;
+  padding:10px 24px;border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 20px rgba(56,189,248,.3);
+  transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden;
+}
+.btn-save-main:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(56,189,248,.4);}
+.btn-save-main:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-save-main svg{width:16px;height:16px;}
+.spin-sm{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Preview Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  width:100%;max-width:480px;max-height:90vh;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);
+  animation:modalIn .3s cubic-bezier(.22,1,.36,1) both;
+  display:flex;flex-direction:column;
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-header{
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.modal-header h3{font-size:16px;font-weight:700;}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.06);color:var(--muted2);font-size:18px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.modal-close:hover{background:rgba(255,255,255,.1);color:var(--text);}
+.modal-body{flex:1;overflow-y:auto;}
+
+/* GitHub Config Modal */
+.github-form{display:flex;flex-direction:column;gap:16px;padding:24px;}
+.github-form label{font-family:var(--mono);font-size:13px;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;}
+.github-form input{
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:var(--mono);font-size:13px;
+  padding:10px 14px;outline:none;transition:border-color .15s;width:100%;margin-top:6px;
+}
+.github-form input:focus{border-color:rgba(56,189,248,.5);}
+.github-form .hint{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6;}
+.github-save-btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;
+  padding:12px;border-radius:10px;cursor:pointer;width:100%;
+  box-shadow:0 4px 16px rgba(56,189,248,.3);transition:opacity .15s;
+}
+.github-save-btn:hover{opacity:.9;}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  border-radius:14px;padding:13px 22px;font-size:13px;font-weight:600;
+  display:none;align-items:center;gap:10px;z-index:200;white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+}
+.toast.show{display:flex;animation:slideUp .35s cubic-bezier(.22,1,.36,1) both;}
+.toast.success{background:rgba(22,197,94,.12);border:1px solid rgba(34,197,94,.35);color:#4ade80;}
+.toast.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;}
+.toast.info{background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);color:var(--accent);}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── Save Success Overlay ── */
+.save-success{
+  position:fixed;inset:0;z-index:300;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+}
+.save-success.show{display:flex;animation:fadeIn .3s ease both;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.save-success-card{
+  background:var(--surface);border:1px solid rgba(34,197,94,.3);
+  border-radius:28px;padding:44px 40px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  text-align:center;max-width:340px;width:90%;
+  box-shadow:0 0 0 1px rgba(34,197,94,.1),0 40px 80px rgba(0,0,0,.5);
+  animation:popIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.save-icon-wrap{
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(34,197,94,.12);border:2px solid rgba(34,197,94,.3);
+  display:flex;align-items:center;justify-content:center;
+  animation:scaleIn .6s cubic-bezier(.22,1,.36,1) .1s both;
+}
+@keyframes scaleIn{from{transform:scale(0)}to{transform:scale(1)}}
+.save-icon-wrap svg{width:40px;height:40px;}
+.save-check-circle{stroke-dasharray:100;stroke-dashoffset:100;animation:drawCheck .6s ease .3s forwards;}
+@keyframes drawCheck{to{stroke-dashoffset:0}}
+.save-title{font-size:20px;font-weight:800;color:#4ade80;}
+.save-sub{font-family:var(--mono);font-size:12px;color:var(--muted2);line-height:1.6;letter-spacing:.04em;}
+.save-close-btn{
+  margin-top:8px;padding:12px 32px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 16px rgba(34,197,94,.3);
+  transition:transform .15s,box-shadow .15s;
+}
+.save-close-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(34,197,94,.4);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+/* ── LIGHT THEME ── */
+[data-theme="light"]{
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --accent:#0284c7;--accent2:#4f46e5;
+  --text:#0f172a;--muted:#94a3b8;--muted2:#64748b;
+  --green:#16a34a;--red:#dc2626;--orange:#ea580c;
+}
+[data-theme="light"] body::before{
+  background:radial-gradient(700px 700px at 90% -10%,rgba(2,132,199,.05) 0%,transparent 60%),
+             radial-gradient(500px 500px at -5% 100%,rgba(79,70,229,.05) 0%,transparent 60%);
+}
+[data-theme="light"] .sidebar{background:#fff;border-color:#e2e8f0;}
+[data-theme="light"] .section{background:#fff;border-color:#e2e8f0;}
+[data-theme="light"] .main{background:#f0f4f8;}
+[data-theme="light"] input,[data-theme="light"] textarea,[data-theme="light"] select{background:#f8fafc;border-color:#e2e8f0;color:#0f172a;}
+[data-theme="light"] .nav-item{color:#64748b;}
+[data-theme="light"] .nav-item:hover{background:rgba(0,0,0,.04);color:#0f172a;}
+[data-theme="light"] .nav-item.active{background:rgba(2,132,199,.1);color:#0284c7;}
+[data-theme="light"] .config-banner{background:rgba(79,70,229,.06);border-color:rgba(79,70,229,.2);}
+[data-theme="light"] .action-bar{background:rgba(240,244,248,.95);}
+
+[data-theme="light"] .login-input{background:#f8fafc;border-color:#e2e8f0;color:#0f172a;}
+[data-theme="light"] .toggle-track{background:#cbd5e1;}
+[data-theme="light"] .music-upload{background:#f8fafc;border-color:#e2e8f0;}
+[data-theme="light"] .tag-chip{background:rgba(2,132,199,.08);border-color:rgba(2,132,199,.2);color:#0284c7;}
+[data-theme="light"] .modal{background:#fff;}
+[data-theme="light"] .github-form input{background:#f8fafc;border-color:#e2e8f0;color:#0f172a;}
+[data-theme="light"] .btn-preview{background:#f1f5f9;border-color:#e2e8f0;color:#0f172a;}
+[data-theme="light"] .social-icon-wrap{border-color:#e2e8f0;}
+[data-theme="light"] .photo-preview{border-color:#e2e8f0;background:#f8fafc;}
+
+
+/* ══════════════════════════════════════
+   RESPONSIVE — Tablet (≤ 900px)
+══════════════════════════════════════ */
+@media (max-width:900px){
+  .sidebar{
+    width:220px;padding:20px 14px;
+  }
+  .main{padding:24px 20px 100px;}
+  .action-bar{padding:14px 20px;}
+  .btn-preview span{display:none;}
+  .btn-save-main span{display:none;}
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 640px)
+══════════════════════════════════════ */
+@media (max-width:640px){
+
+  /* Layout: sidebar یه bottom nav میشه */
+  .layout{flex-direction:column;}
+
+  .sidebar{
+    display:none; /* desktop sidebar hidden */
+  }
+
+  /* Bottom Nav */
+  .bottom-nav{
+    display:flex !important;
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:rgba(6,9,15,.96);backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    padding:10px 4px env(safe-area-inset-bottom);
+    justify-content:space-around;align-items:center;
+  }
+  .bnav-item{max-width:52px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:var(--muted);font-family:var(--mono);font-size:9px;
+    letter-spacing:.06em;padding:6px 8px;border-radius:10px;cursor:pointer;
+    transition:color .15s,background .15s;flex:1;
+  }
+  .bnav-item svg{width:20px;height:20px;}
+  .bnav-item.active{color:var(--accent);}
+  .bnav-item:active{background:rgba(255,255,255,.05);}
+
+  /* Main area */
+  .main{
+    padding:16px 12px 160px;
+    width:100%;
+  }
+
+  /* Page header */
+  .page-title{font-size:20px;}
+  .page-sub{font-size:11px;}
+
+  /* Config Banner */
+  .config-banner{flex-direction:column;gap:10px;padding:14px 16px;}
+  .config-banner svg{margin-top:0;}
+  .btn-config{align-self:flex-start;}
+
+  /* Sections */
+  .section{padding:16px;border-radius:14px;}
+  .section-title{font-size:13px;}
+
+  /* Rows stack vertically on mobile */
+  .row{flex-direction:column;gap:12px;margin-bottom:12px;}
+
+  /* Social rows */
+  .social-row{gap:10px;}
+  .social-icon-wrap{width:32px;height:32px;}
+
+  /* Music upload */
+  .music-upload{flex-wrap:wrap;gap:10px;}
+  .music-info{min-width:0;}
+  .music-name{font-size:12px;}
+
+  /* Photo upload */
+  .photo-upload{flex-wrap:wrap;}
+
+  /* Action bar — compact on mobile */
+  .action-bar{
+    padding:10px 12px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    gap:8px;
+    /* sits above bottom nav */
+    bottom:60px;
+    border-radius:14px 14px 0 0;
+  }
+  .action-info{font-size:10px;}
+  .action-btns{gap:8px;}
+  .btn-preview{
+    padding:9px 12px;font-size:13px;
+  }
+  .btn-save-main{
+    padding:9px 16px;font-size:13px;
+  }
+
+  /* Modals full-screen on mobile */
+  .modal{
+    max-width:100%;max-height:92vh;
+    border-radius:20px 20px 0 0;
+    position:fixed;bottom:0;left:0;right:0;
+    animation:modalUp .3s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes modalUp{
+    from{opacity:0;transform:translateY(40px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .modal-overlay{align-items:flex-end;padding:0;}
+
+  /* GitHub form on mobile */
+  .github-form{padding:16px;}
+
+  /* Tags */
+  .tag-add{flex-direction:column;}
+  .tag-add-btn{width:100%;}
+
+  /* Toggle rows */
+  .toggle-row{padding:10px 0;}
+  .toggle-label{font-size:13px;}
+  .toggle-sub{font-size:10px;}
+
+  /* Login card */
+  .login-card{padding:28px 20px;border-radius:20px;}
+  .login-title{font-size:18px;}
+  .login-input{font-size:16px;} /* prevent iOS zoom */
+
+  /* Toast above bottom nav */
+  .toast{bottom:140px;font-size:12px;padding:10px 16px;}
+}
+
+/* ── Bottom Nav — hidden on desktop ── */
+.bottom-nav{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-text">
+        <div class="login-title">Moharez Panel</div>
+        <div class="login-sub">NFC CARD MANAGER v2.0</div>
+      </div>
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+      </div>
+    </div>
+    <label class="login-label" for="loginPass">رمز ورود</label>
+    <div class="login-input-wrap">
+      <input class="login-input" type="password" id="loginPass" placeholder="رمز پنل را وارد کنید" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="login-eye" id="eyeBtn" onclick="toggleEye()" type="button">
+        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+      <span id="loginBtnText">ورود به پنل</span>
+    </button>
+    <div class="login-error" id="loginError">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      رمز وارد شده صحیح نمی‌باشد. در صورت فراموشی رمز به ادمین پیام بدهید.
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Layout ── -->
+<div class="layout" id="mainLayout" style="display:none;">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Moharez</div>
+      <div class="brand-sub">NFC PANEL v2.0</div>
+    </div>
+  </div>
+  <span class="nav-label">منوی اصلی</span>
+  <div class="nav-item active" onclick="scrollToSec('top')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    داشبورد
+  </div>
+  <span class="nav-label">بخش‌ها</span>
+  <div class="nav-item" onclick="scrollToSec('sec-profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    پروفایل
+  </div>
+  <div class="nav-item" onclick="scrollToSec('sec-social')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    شبکه‌های اجتماعی
+  </div>
+  <div class="nav-item" onclick="scrollToSec('sec-contact')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16z"/></svg>
+    اطلاعات تماس
+  </div>
+  <div class="nav-item" onclick="scrollToSec('sec-music')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    موزیک
+  </div>
+  <div class="nav-item" onclick="scrollToSec('sec-display')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+    تنظیمات نمایش
+  </div>
+  <div class="nav-item" onclick="openGithubConfig()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+    تنظیمات GitHub
+  </div>
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="doLogout()">خروج از پنل</button>
+    <button class="btn-logout" style="background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.2);color:var(--accent);" onclick="togglePanelTheme()" id="themeToggleBtn">☀️ تم روشن</button>
+    <div class="version">MOHAREZ.NFC © 2026</div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div id="top" class="page-header">
+    <h1 class="page-title">ویرایش کارت دیجیتال</h1>
+    
+  </div>
+
+  <!-- GitHub Config Banner -->
+  <div class="config-banner" id="configBanner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div class="config-banner-text">
+      <div class="config-banner-title">اتصال GitHub تنظیم نشده</div>
+      <div class="config-banner-sub">برای ذخیره اطلاعات روی سایت، باید GitHub Token و مشخصات repo را وارد کنی.</div>
+    </div>
+    <button class="btn-config" onclick="openGithubConfig()">تنظیم اتصال</button>
+  </div>
+
+  <!-- Profile Section -->
+  <div class="section" id="sec-profile">
+    <div class="section-title">
+      <div class="icon ic-blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      اطلاعات پروفایل
+    </div>
+    <div class="field full" style="margin-bottom:20px;">
+      <label>عکس پروفایل</label>
+      <div class="photo-upload">
+        <div class="photo-preview" id="photoPreview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="upload-btn">
+          <label for="photoInput">📷 انتخاب عکس</label>
+          <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)"/>
+          <span class="upload-hint">JPG, PNG — حداکثر 2MB</span>
+          <button class="photo-remove" id="photoRemove" onclick="removePhoto()">حذف عکس</button>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>نام کامل (انگلیسی)</label>
+        <input type="text" id="fullName" placeholder="Mohammad Amin" oninput="markChanged()"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>عنوان شغلی</label>
+        <input type="text" id="jobTitle" placeholder="Computer Engineer / Network Admin" oninput="markChanged()"/>
+      </div>
+    </div>
+    <div class="field full" style="margin-top:16px;">
+      <label>تگ‌ها (حداکثر ۵ تا)</label>
+      <div class="tags-wrap" id="tagsWrap"></div>
+      <div class="tag-add">
+        <input type="text" id="tagInput" placeholder="مثلاً: Networking" onkeydown="if(event.key==='Enter'){addTag();event.preventDefault();}"/>
+        <button class="tag-add-btn" onclick="addTag()">+ اضافه</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social Section -->
+  <div class="section" id="sec-social">
+    <div class="section-title">
+      <div class="icon ic-pink">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </div>
+      شبکه‌های اجتماعی
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap s-tg">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.674l-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.98.885z"/></svg>
+      </div>
+      <div class="field"><label>تلگرام (بدون @)</label><input type="text" id="telegram" placeholder="username" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap s-ig">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </div>
+      <div class="field"><label>اینستاگرام (بدون @)</label><input type="text" id="instagram" placeholder="username" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap s-wa">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </div>
+      <div class="field"><label>واتساپ (با کد کشور)</label><input type="text" id="whatsapp" placeholder="+989123456789" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap s-gh">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+      </div>
+      <div class="field"><label>GitHub (بدون @)</label><input type="text" id="github" placeholder="username" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap s-li">
+        <svg viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+      </div>
+      <div class="field"><label>لینکدین (بدون @)</label><input type="text" id="linkedin" placeholder="username" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap" style="background:rgba(255,0,0,.1);border-color:rgba(255,0,0,.25);">
+        <svg viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </div>
+      <div class="field"><label>یوتیوب (بدون @)</label><input type="text" id="youtube" placeholder="channel" oninput="markChanged()"/></div>
+    </div>
+    <div class="social-row">
+      <div class="social-icon-wrap" style="background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.2);">
+        <svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.727-8.836L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </div>
+      <div class="field"><label>توییتر / X (بدون @)</label><input type="text" id="twitter" placeholder="username" oninput="markChanged()"/></div>
+    </div>
+  </div>
+
+  <!-- Contact Section -->
+  <div class="section" id="sec-contact">
+    <div class="section-title">
+      <div class="icon ic-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16z"/></svg>
+      </div>
+      اطلاعات تماس
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>شماره تلفن (با کد کشور)</label>
+        <input type="text" id="phone" placeholder="+989123456789" oninput="markChanged()"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>ایمیل</label>
+        <input type="email" id="email" placeholder="example@gmail.com" oninput="markChanged()"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>آدرس / شهر</label>
+        <input type="text" id="location" placeholder="Tehran, Iran" oninput="markChanged()"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Music Section -->
+  <div class="section" id="sec-music">
+    <div class="section-title">
+      <div class="icon ic-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      موزیک پروفایل
+    </div>
+    <div class="music-upload">
+      <div class="music-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <div class="music-info">
+        <div class="music-name" id="musicName">هنوز آهنگی انتخاب نشده</div>
+        <div class="music-meta" id="musicMeta">MP3 آپلود کن</div>
+      </div>
+      <div class="music-change">
+        <label for="musicInput">📁 انتخاب</label>
+        <input type="file" id="musicInput" accept="audio/mp3,audio/mpeg" style="display:none" onchange="handleMusic(this)"/>
+        <button class="music-remove" id="musicRemove" onclick="removeMusic()">حذف</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px;">
+      <div class="field">
+        <label>نام آهنگ</label>
+        <input type="text" id="trackName" placeholder="اسم آهنگ" oninput="markChanged()"/>
+      </div>
+      <div class="field">
+        <label>خواننده</label>
+        <input type="text" id="trackArtist" placeholder="نام خواننده" oninput="markChanged()"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Display Settings -->
+  <div class="section" id="sec-display">
+    <div class="section-title">
+      <div class="icon ic-yellow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+      </div>
+      تنظیمات نمایش
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">دکمه "افزودن به مخاطبین"</div><div class="toggle-sub">دکمه vCard در پایین کارت</div></div>
+      <label class="toggle"><input type="checkbox" id="showVcard" onchange="markChanged()"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">پخش موزیک</div><div class="toggle-sub">پلیر آهنگ در هدر کارت</div></div>
+      <label class="toggle"><input type="checkbox" id="showMusic" onchange="markChanged()"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">نمایش آدرس</div><div class="toggle-sub">ردیف لوکیشن در کارت</div></div>
+      <label class="toggle"><input type="checkbox" id="showLocation" onchange="markChanged()"/><div class="toggle-track"></div></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">نمایش ایمیل</div><div class="toggle-sub">ردیف ایمیل در کارت</div></div>
+      <label class="toggle"><input type="checkbox" id="showEmail" onchange="markChanged()"/><div class="toggle-track"></div></label>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ── Bottom Nav (Mobile Only) ── -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bnav-item active" onclick="scrollToSec('top');setActiveNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    داشبورد
+  </div>
+  <div class="bnav-item" onclick="scrollToSec('sec-profile');setActiveNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    پروفایل
+  </div>
+  <div class="bnav-item" onclick="scrollToSec('sec-social');setActiveNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    شبکه‌ها
+  </div>
+  <div class="bnav-item" onclick="scrollToSec('sec-music');setActiveNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    موزیک
+  </div>
+  <div class="bnav-item" onclick="scrollToSec('sec-display');setActiveNav(this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+    نمایش
+  </div>
+  <div class="bnav-item" onclick="openGithubConfig()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+    GitHub
+  </div>
+  <div class="bnav-item" onclick="togglePanelTheme()" id="bnavThemeBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    تم
+  </div>
+  <div class="bnav-item" onclick="doLogout()" style="color:var(--red);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    خروج
+  </div>
+</nav>
+
+<!-- Action Bar -->
+<div class="action-bar" id="actionBar" style="display:none;">
+  <div class="action-status">
+    <div class="action-dot" id="actionDot"></div>
+    <span class="action-info" id="actionInfo">اطلاعات بارگذاری شد.</span>
+  </div>
+  <div class="action-btns">
+    <button class="btn-preview" onclick="openPreview()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg>
+      پیش‌نمایش
+    </button>
+    <button class="btn-save-main" id="saveBtn" onclick="saveToGithub()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      ثبت روی سایت
+    </button>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>پیش‌نمایش کارت</h3>
+      <button class="modal-close" onclick="closePreview()">×</button>
+    </div>
+    <div class="modal-body" id="previewBody" style="padding:0;"></div>
+  </div>
+</div>
+
+<!-- GitHub Config Modal -->
+<div class="modal-overlay" id="githubModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>تنظیمات GitHub</h3>
+      <button class="modal-close" onclick="closeGithubConfig()">×</button>
+    </div>
+    <div class="github-form">
+      <div>
+        <label>GitHub Token (Fine-grained / Classic)</label>
+        <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+        <p class="hint" style="margin-top:6px;">از Settings → Developer Settings → Personal Access Tokens بگیر. دسترسی Contents: Read & Write لازمه.</p>
+      </div>
+      <div>
+        <label>نام کاربری GitHub</label>
+        <input type="text" id="ghOwner" placeholder="your-username"/>
+      </div>
+      <div>
+        <label>نام Repository</label>
+        <input type="text" id="ghRepo" placeholder="your-repo-name"/>
+      </div>
+      <div>
+        <label>مسیر فایل data.json در repo</label>
+        <input type="text" id="ghPath" placeholder="data.json"/>
+        <p class="hint" style="margin-top:6px;">اگه داخل پوشه‌ای هست بنویس: docs/data.json</p>
+      </div>
+      <div>
+        <label>Branch</label>
+        <input type="text" id="ghBranch" placeholder="main"/>
+      </div>
+      <button class="github-save-btn" onclick="saveGithubConfig()">ذخیره تنظیمات</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<!-- Save Success Overlay -->
+<div class="save-success" id="saveSuccess" onclick="closeSaveSuccess()">
+  <div class="save-success-card" onclick="event.stopPropagation()">
+    <div class="save-icon-wrap">
+      <svg viewBox="0 0 52 52" fill="none">
+        <circle cx="26" cy="26" r="24" stroke="#22c55e" stroke-width="2" opacity=".3"/>
+        <polyline class="save-check-circle" points="14,26 22,34 38,18" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="save-title">ذخیره شد!</div>
+    <div class="save-sub">اطلاعات کارت با موفقیت ثبت شد.<br/>سایت چند ثانیه دیگه آپدیت می‌شه.</div>
+    <button class="save-close-btn" onclick="closeSaveSuccess()">باشه، ممنون</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ─── Config ───────────────────────────────────────────
+// رمز پنل را اینجا تغییر بده:
+const PANEL_PASSWORD = 'Mohamad1928';
+// ──────────────────────────────────────────────────────
+
+let photoB64 = '';
+let musicB64 = '';
+let tags = [];
+let hasChanges = false;
+let originalData = null;
+
+// ── Theme ──
+function togglePanelTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const next = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = next === 'light' ? '🌙 تم تیره' : '☀️ تم روشن';
+  const bnavBtn = document.getElementById('bnavThemeBtn');
+  if(bnavBtn) bnavBtn.querySelector('svg').style.stroke = next === 'light' ? 'var(--accent)' : 'currentColor';
+  localStorage.setItem('panel_theme', next);
+}
+(function initPanelTheme(){
+  const saved = localStorage.getItem('panel_theme') || 'dark';
+  if(saved === 'light') document.documentElement.setAttribute('data-theme','light');
+  document.addEventListener('DOMContentLoaded',()=>{
+    const btn = document.getElementById('themeToggleBtn');
+    if(btn) btn.textContent = saved === 'light' ? '🌙 تم تیره' : '☀️ تم روشن';
+  });
+})();
+
+// ── Eye toggle ──
+function toggleEye(){
+  const inp = document.getElementById('loginPass');
+  const icon = document.getElementById('eyeIcon');
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  icon.innerHTML = isPass
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+// ── Login ──
+function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  const btn = document.getElementById('loginBtn');
+  const btnText = document.getElementById('loginBtnText');
+  btn.classList.add('loading');
+  btnText.textContent = 'در حال ورود...';
+  setTimeout(()=>{
+    if (pass === PANEL_PASSWORD) {
+      sessionStorage.setItem('panel_auth', '1');
+      // Turn button green
+      btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+      btn.style.boxShadow = '0 8px 32px rgba(34,197,94,.5)';
+      btnText.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>خوش آمدی!</span>';
+      // Turn input green
+      const inp = document.getElementById('loginPass');
+      inp.style.borderColor = 'rgba(34,197,94,.6)';
+      inp.style.background = 'rgba(34,197,94,.06)';
+      inp.style.boxShadow = '0 0 0 3px rgba(34,197,94,.12)';
+      // Turn logo green
+      document.querySelector('.login-logo-icon').style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+      document.querySelector('.login-logo-icon').style.boxShadow = '0 0 0 4px rgba(34,197,94,.2),0 8px 32px rgba(34,197,94,.4)';
+      // Ripple overlay
+      const ripple = document.createElement('div');
+      ripple.id = 'loginRipple';
+      ripple.style.cssText = 'position:fixed;inset:0;z-index:1000;pointer-events:none;display:flex;align-items:center;justify-content:center;';
+      ripple.innerHTML = '<div id="rippleCircle" style="width:0;height:0;border-radius:50%;background:radial-gradient(circle,rgba(34,197,94,.25) 0%,rgba(34,197,94,.08) 50%,transparent 70%);transition:all .8s cubic-bezier(.22,1,.36,1);"></div>';
+      document.body.appendChild(ripple);
+      setTimeout(()=>{
+        const size = Math.max(window.innerWidth, window.innerHeight) * 3;
+        const rc = document.getElementById('rippleCircle');
+        rc.style.width = size+'px';
+        rc.style.height = size+'px';
+        rc.style.marginLeft = -size/2+'px';
+        rc.style.marginTop = -size/2+'px';
+      }, 50);
+      // Card fly up
+      setTimeout(()=>{
+        document.querySelector('.login-card').style.transition = 'transform .6s cubic-bezier(.22,1,.36,1),opacity .6s ease';
+        document.querySelector('.login-card').style.transform = 'translateY(-30px) scale(1.02)';
+        document.querySelector('.login-card').style.opacity = '0';
+      }, 350);
+      // Fade out login screen + show panel
+      setTimeout(()=>{
+        document.getElementById('loginScreen').style.transition = 'opacity .4s ease';
+        document.getElementById('loginScreen').style.opacity = '0';
+      }, 600);
+      setTimeout(()=>{
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('loginScreen').style.opacity = '';
+        const main = document.getElementById('mainLayout');
+        const bar = document.getElementById('actionBar');
+        main.style.opacity = '0';
+        main.style.transform = 'translateY(16px)';
+        main.style.transition = 'opacity .5s ease,transform .5s cubic-bezier(.22,1,.36,1)';
+        main.style.display = 'flex';
+        bar.style.display = 'flex';
+        bar.style.opacity = '0';
+        bar.style.transition = 'opacity .4s ease .15s';
+        setTimeout(()=>{
+          main.style.opacity = '1';
+          main.style.transform = 'translateY(0)';
+          bar.style.opacity = '1';
+          ripple.remove();
+        }, 50);
+        loadData();
+      }, 900);
+    } else {
+      btn.classList.remove('loading');
+      btnText.textContent = 'ورود به پنل';
+      const err = document.getElementById('loginError');
+      err.style.display = 'none';
+      err.classList.remove('show');
+      void err.offsetWidth;
+      err.style.display = '';
+      err.classList.add('show');
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+    }
+  }, 600);
+}
+function doLogout() {
+  sessionStorage.removeItem('panel_auth');
+  location.reload();
+}
+
+// ── GitHub Config ──
+function getGhConfig() {
+  return {
+    token:  localStorage.getItem('gh_token')  || '',
+    owner:  localStorage.getItem('gh_owner')  || '',
+    repo:   localStorage.getItem('gh_repo')   || '',
+    path:   localStorage.getItem('gh_path')   || 'data.json',
+    branch: localStorage.getItem('gh_branch') || 'main',
+  };
+}
+function openGithubConfig() {
+  const c = getGhConfig();
+  document.getElementById('ghToken').value  = c.token;
+  document.getElementById('ghOwner').value  = c.owner;
+  document.getElementById('ghRepo').value   = c.repo;
+  document.getElementById('ghPath').value   = c.path || 'data.json';
+  document.getElementById('ghBranch').value = c.branch || 'main';
+  document.getElementById('githubModal').classList.add('open');
+}
+function closeGithubConfig() {
+  document.getElementById('githubModal').classList.remove('open');
+}
+function saveGithubConfig() {
+  const token  = document.getElementById('ghToken').value.trim();
+  const owner  = document.getElementById('ghOwner').value.trim();
+  const repo   = document.getElementById('ghRepo').value.trim();
+  const path   = document.getElementById('ghPath').value.trim() || 'data.json';
+  const branch = document.getElementById('ghBranch').value.trim() || 'main';
+  if (!token || !owner || !repo) { showToast('لطفاً همه فیلدها را پر کن', 'error'); return; }
+  localStorage.setItem('gh_token',  token);
+  localStorage.setItem('gh_owner',  owner);
+  localStorage.setItem('gh_repo',   repo);
+  localStorage.setItem('gh_path',   path);
+  localStorage.setItem('gh_branch', branch);
+  closeGithubConfig();
+  checkConfigBanner();
+  showToast('تنظیمات GitHub ذخیره شد', 'success');
+}
+function checkConfigBanner() {
+  const c = getGhConfig();
+  document.getElementById('configBanner').style.display = (c.token && c.owner && c.repo) ? 'none' : 'flex';
+}
+
+// ── Load data from data.json ──
+async function loadData() {
+  try {
+    const res = await fetch('data.json?t=' + Date.now());
+    const d = await res.json();
+    originalData = d;
+    fillForm(d);
+    setStatus('loaded');
+  } catch(e) {
+    showToast('خطا در بارگذاری data.json', 'error');
+    setStatus('error');
+  }
+  checkConfigBanner();
+}
+
+function fillForm(d) {
+  document.getElementById('fullName').value    = d.name    || '';
+  document.getElementById('jobTitle').value    = d.job     || '';
+  document.getElementById('telegram').value    = d.telegram|| '';
+  document.getElementById('instagram').value   = d.instagram||'';
+  document.getElementById('whatsapp').value    = d.whatsapp|| '';
+  document.getElementById('github').value      = d.github  || '';
+  document.getElementById('linkedin').value    = d.linkedin|| '';
+  document.getElementById('youtube').value     = d.youtube  || '';
+  document.getElementById('twitter').value     = d.twitter  || '';
+  document.getElementById('phone').value       = d.phone   || '';
+  document.getElementById('email').value       = d.email   || '';
+  document.getElementById('location').value    = d.location|| '';
+  document.getElementById('trackName').value   = d.trackName  || '';
+  document.getElementById('trackArtist').value = d.trackArtist|| '';
+  document.getElementById('showVcard').checked    = d.showVcard    !== false;
+  document.getElementById('showMusic').checked    = d.showMusic    === true;
+  document.getElementById('showLocation').checked = d.showLocation !== false;
+  document.getElementById('showEmail').checked    = d.showEmail    !== false;
+
+  tags = Array.isArray(d.tags) ? [...d.tags] : [];
+  renderTags();
+
+  if (d.photo) {
+    photoB64 = d.photo;
+    document.getElementById('photoPreview').innerHTML = `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:50%;"/>`;
+    document.getElementById('photoRemove').style.display = 'inline-block';
+  }
+  if (d.music) {
+    musicB64 = d.music;
+    document.getElementById('musicName').textContent = 'آهنگ موجود';
+    document.getElementById('musicMeta').textContent = 'از سایت بارگذاری شده';
+    document.getElementById('musicRemove').style.display = 'inline-block';
+  }
+}
+
+// ── Collect data ──
+function collectData() {
+  return {
+    name:      document.getElementById('fullName').value.trim(),
+    job:       document.getElementById('jobTitle').value.trim(),
+    tags:      [...tags],
+    telegram:  document.getElementById('telegram').value.trim(),
+    instagram: document.getElementById('instagram').value.trim(),
+    whatsapp:  document.getElementById('whatsapp').value.trim(),
+    github:    document.getElementById('github').value.trim(),
+    linkedin:  document.getElementById('linkedin').value.trim(),
+    youtube:   document.getElementById('youtube').value.trim(),
+    twitter:   document.getElementById('twitter').value.trim(),
+    phone:     document.getElementById('phone').value.trim(),
+    email:     document.getElementById('email').value.trim(),
+    location:  document.getElementById('location').value.trim(),
+    trackName:   document.getElementById('trackName').value.trim(),
+    trackArtist: document.getElementById('trackArtist').value.trim(),
+    showVcard:    document.getElementById('showVcard').checked,
+    showMusic:    document.getElementById('showMusic').checked,
+    showLocation: document.getElementById('showLocation').checked,
+    showEmail:    document.getElementById('showEmail').checked,
+    photo: photoB64,
+    music: musicB64,
+  };
+}
+
+// ── Save to GitHub ──
+async function saveToGithub() {
+  const c = getGhConfig();
+  if (!c.token || !c.owner || !c.repo) {
+    openGithubConfig();
+    showToast('اول تنظیمات GitHub را کامل کن', 'info');
+    return;
+  }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin-sm"></div> در حال ذخیره...';
+
+  const data = collectData();
+  const content = JSON.stringify(data, null, 2);
+  const contentB64 = btoa(unescape(encodeURIComponent(content)));
+
+  try {
+    const apiBase = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${c.path}`;
+
+    // Fetch SHA and prepare content simultaneously
+    const [getRes] = await Promise.all([
+      fetch(apiBase + `?ref=${c.branch}`, {
+        headers: { Authorization: `token ${c.token}`, Accept: 'application/vnd.github.v3+json' }
+      })
+    ]);
+    let sha = '';
+    if (getRes.ok) {
+      const getJson = await getRes.json();
+      sha = getJson.sha || '';
+    }
+
+    // Push update
+    const body = { message: 'chore: update card', content: contentB64, branch: c.branch };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(apiBase, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${c.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (putRes.ok) {
+      originalData = data;
+      hasChanges = false;
+      setStatus('saved');
+      showSaveSuccess();
+    } else {
+      const err = await putRes.json();
+      throw new Error(err.message || putRes.statusText);
+    }
+  } catch(e) {
+    showToast('خطا: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> ثبت روی سایت`;
+}
+
+// ── Preview ──
+function buildPreviewHTML() {
+  const d = collectData();
+  const nameParts = d.name.trim().split(' ');
+  const nameFirst = nameParts.slice(0,-1).join(' ') || nameParts[0];
+  const nameLast  = nameParts.length > 1 ? nameParts[nameParts.length-1] : '';
+
+  const avatarHTML = d.photo
+    ? `<img src="${d.photo}" alt="${d.name}"/>`
+    : `<div style="width:100%;height:100%;background:rgba(56,189,248,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #0d1117;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`;
+
+  const tagsHTML = d.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+
+  const playerHTML = d.showMusic && d.music ? `<div class="player"><div class="player-top"><button class="play-btn"><svg viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg></button><div class="track-info"><div class="track-name">${d.trackName||'Track'}</div><div class="track-artist">${d.trackArtist||''}</div></div><div class="wave"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div></div><div class="progress-wrap"><span class="prog-time">0:00</span><div class="prog-bar-bg"><div class="prog-bar-fill"></div></div><span class="prog-time">0:00</span></div></div>` : '';
+
+  const ICONS = {
+    telegram:  `<svg viewBox="0 0 24 24" fill="#29B6F6"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.674l-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.98.885z"/></svg>`,
+    instagram: `<svg viewBox="0 0 24 24"><defs><linearGradient id="ig2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f09433"/><stop offset="25%" stop-color="#e6683c"/><stop offset="50%" stop-color="#dc2743"/><stop offset="75%" stop-color="#cc2366"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs><path fill="url(#ig2)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    whatsapp:  `<svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`,
+    github:    `<svg viewBox="0 0 24 24" fill="#C9D1D9"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>`,
+    linkedin:  `<svg viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
+    youtube:   `<svg viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+    twitter:   `<svg viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.727-8.836L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+  };
+
+  const socials = [];
+  if(d.telegram)  socials.push(`<a class="soc-btn soc-tg" href="#">${ICONS.telegram}</a>`);
+  if(d.instagram) socials.push(`<a class="soc-btn soc-ig" href="#">${ICONS.instagram}</a>`);
+  if(d.whatsapp)  socials.push(`<a class="soc-btn soc-wa" href="#">${ICONS.whatsapp}</a>`);
+  if(d.linkedin)  socials.push(`<a class="soc-btn soc-li" href="#">${ICONS.linkedin}</a>`);
+  if(d.github)    socials.push(`<a class="soc-btn soc-gh" href="#">${ICONS.github}</a>`);
+  if(d.youtube)   socials.push(`<a class="soc-btn soc-yt" href="#">${ICONS.youtube}</a>`);
+  if(d.twitter)   socials.push(`<a class="soc-btn soc-tw" href="#">${ICONS.twitter}</a>`);
+
+  const infoRows = [];
+  if(d.phone) infoRows.push(`<div class="info-row"><div class="info-icon ic-phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .99h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16z"/></svg></div><div><div class="info-label">Contact</div><div class="info-value">${d.phone}</div></div></div>`);
+  if(d.showEmail && d.email) infoRows.push(`<div class="info-row"><div class="info-icon ic-mail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="info-label">Email</div><div class="info-value">${d.email}</div></div></div>`);
+  if(d.showLocation && d.location) infoRows.push(`<div class="info-row"><div class="info-icon ic-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><div class="info-label">Location</div><div class="info-value">${d.location}</div></div></div>`);
+
+  const saveBtn = d.showVcard ? `<button style="margin:16px 20px 20px;display:block;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;width:calc(100% - 40px);"><div style="display:flex;align-items:center;justify-content:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>افزودن به مخاطبین</div></button>` : '';
+
+  const css = `*{box-sizing:border-box;margin:0;padding:0}:root{--bg:#06090f;--card:#0d1117;--card2:#111820;--border:#1a2435;--border2:#243040;--accent:#38bdf8;--accent2:#6366f1;--text:#e2e8f0;--muted:#4a5a72;--muted2:#6b7e96;--sans:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;}html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;}.card{direction:ltr;width:100%;max-width:380px;background:var(--card);border:1px solid var(--border);border-radius:26px;overflow:hidden;box-shadow:0 0 0 1px rgba(56,189,248,.07),0 40px 100px rgba(0,0,0,.7);}.hero{position:relative;padding:30px 26px 22px;background:linear-gradient(160deg,#0d1117,#101822);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;text-align:center;overflow:hidden;}.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.04) 1px,transparent 1px);background-size:32px 32px;}.hero::after{content:'';position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(56,189,248,.15) 0%,transparent 70%);top:-40px;left:50%;transform:translateX(-50%);}.avatar-ring{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;padding:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-bottom:13px;box-shadow:0 0 26px rgba(56,189,248,.25);}.avatar-ring img{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:top;display:block;border:2px solid var(--card);}.status{position:absolute;bottom:4px;right:4px;width:15px;height:15px;background:#22c55e;border-radius:50%;border:3px solid var(--card);z-index:2;}.status::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(34,197,94,.4);animation:ripple 2s infinite;}@keyframes ripple{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.8)}}.name{position:relative;z-index:1;font-size:23px;font-weight:700;letter-spacing:-.02em;line-height:1.1;color:var(--text);}.role{position:relative;z-index:1;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--muted2);letter-spacing:.08em;}.tags{position:relative;z-index:1;display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;justify-content:center;}.tag{font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:100px;border:1px solid rgba(56,189,248,.2);color:var(--accent);background:rgba(56,189,248,.07);}.player{position:relative;z-index:1;margin-top:14px;width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:13px;padding:11px 13px;display:flex;flex-direction:column;gap:8px;}.player-top{display:flex;align-items:center;gap:10px;}.play-btn{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0;}.play-btn svg{width:15px;height:15px;fill:#fff;margin-left:2px;}.track-info{flex:1;min-width:0;}.track-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.track-artist{font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:1px;}.wave{display:flex;align-items:center;gap:2px;height:20px;flex-shrink:0;}.wave-bar{width:3px;border-radius:2px;background:var(--accent);opacity:.4;}.wave-bar:nth-child(1){height:5px}.wave-bar:nth-child(2){height:11px}.wave-bar:nth-child(3){height:17px}.wave-bar:nth-child(4){height:8px}.wave-bar:nth-child(5){height:14px}.wave-bar:nth-child(6){height:6px}.wave-bar:nth-child(7){height:15px}.progress-wrap{display:flex;align-items:center;gap:8px;}.prog-bar-bg{flex:1;height:3px;background:var(--border2);border-radius:3px;}.prog-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;}.prog-time{font-family:var(--mono);font-size:9px;color:var(--muted2);white-space:nowrap;}.socials{display:flex;gap:9px;justify-content:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--card2);flex-wrap:wrap;}.soc-btn{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid var(--border2);}.soc-btn svg{width:20px;height:20px;}.soc-tg{background:rgba(41,182,246,.1);border-color:rgba(41,182,246,.25);}.soc-ig{background:rgba(225,48,108,.1);border-color:rgba(225,48,108,.25);}.soc-wa{background:rgba(37,211,102,.1);border-color:rgba(37,211,102,.25);}.soc-gh{background:rgba(100,110,120,.1);border-color:rgba(100,110,120,.2);}.soc-li{background:rgba(10,102,194,.12);border-color:rgba(10,102,194,.35);}.soc-yt{background:rgba(255,0,0,.1);border-color:rgba(255,0,0,.25);}.soc-tw{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.18);}.infos{padding:14px 18px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);}.info-row{display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:11px;background:rgba(255,255,255,.025);border:1px solid var(--border);color:var(--text);}.info-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}.info-icon svg{width:15px;height:15px;}.info-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px;}.info-value{font-size:12px;font-weight:500;}.ic-phone{background:rgba(34,197,94,.1);color:#22c55e;}.ic-mail{background:rgba(249,115,22,.1);color:#f97316;}.ic-loc{background:rgba(168,85,247,.1);color:#a855f7;}.foot{padding:11px 18px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}.foot-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}.foot-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.5;}`;
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/><style>${css}</style></head><body><div class="page"><div class="card"><div class="hero"><div class="avatar-ring">${avatarHTML}<div class="status"></div></div><h1 class="name">${nameFirst} ${nameLast}</h1><p class="role">${d.job}</p><div class="tags">${tagsHTML}</div>${playerHTML}</div>${socials.length?`<div class="socials">${socials.join('')}</div>`:''}<div class="infos">${infoRows.join('')}</div>${saveBtn}<div class="foot"><span class="foot-label">NFC Digital Card</span><div class="foot-dot"></div><span class="foot-label" style="font-size:9px;color:var(--muted2)">© 2026 MOHAMMAD AMIN</span></div></div></div></body></html>`;
+}
+
+function openPreview() {
+  const html = buildPreviewHTML();
+  const body = document.getElementById('previewBody');
+  body.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:100%;height:75vh;border:none;border-radius:0 0 20px 20px;';
+  iframe.srcdoc = html;
+  body.appendChild(iframe);
+  document.getElementById('previewModal').classList.add('open');
+}
+function closePreview() {
+  document.getElementById('previewModal').classList.remove('open');
+  document.getElementById('previewBody').innerHTML = '';
+}
+
+// ── Tags ──
+function renderTags() {
+  const wrap = document.getElementById('tagsWrap');
+  wrap.innerHTML = tags.map((t,i)=>`<div class="tag-chip">${t}<button onclick="removeTag(${i})">×</button></div>`).join('');
+}
+function addTag() {
+  const inp = document.getElementById('tagInput');
+  const val = inp.value.trim();
+  if (val && tags.length < 5 && !tags.includes(val)) { tags.push(val); renderTags(); markChanged(); }
+  inp.value = '';
+}
+function removeTag(i) { tags.splice(i,1); renderTags(); markChanged(); }
+
+// ── Photo ──
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('عکس باید کمتر از 2MB باشه', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoB64 = e.target.result;
+    document.getElementById('photoPreview').innerHTML = `<img src="${photoB64}" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:50%;"/>`;
+    document.getElementById('photoRemove').style.display = 'inline-block';
+    markChanged();
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto() {
+  photoB64 = '';
+  document.getElementById('photoPreview').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  document.getElementById('photoRemove').style.display = 'none';
+  document.getElementById('photoInput').value = '';
+  markChanged();
+}
+
+// ── Music ──
+function handleMusic(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('musicName').textContent = file.name.replace(/\.mp3$/i,'').replace(/_/g,' ');
+  document.getElementById('musicMeta').textContent = (file.size/1024/1024).toFixed(1) + ' MB';
+  if (!document.getElementById('trackName').value)
+    document.getElementById('trackName').value = file.name.replace(/\.mp3$/i,'').replace(/_/g,' ');
+  const reader = new FileReader();
+  reader.onload = e => {
+    musicB64 = e.target.result;
+    document.getElementById('musicRemove').style.display = 'inline-block';
+    markChanged();
+  };
+  reader.readAsDataURL(file);
+}
+function removeMusic() {
+  musicB64 = '';
+  document.getElementById('musicName').textContent = 'هنوز آهنگی انتخاب نشده';
+  document.getElementById('musicMeta').textContent = 'MP3 آپلود کن';
+  document.getElementById('musicInput').value = '';
+  document.getElementById('musicRemove').style.display = 'none';
+  markChanged();
+}
+
+// ── Status ──
+function markChanged() {
+  hasChanges = true;
+  setStatus('changed');
+}
+function setStatus(state) {
+  const dot  = document.getElementById('actionDot');
+  const info = document.getElementById('actionInfo');
+  if (state === 'loaded')  { dot.className='action-dot'; info.textContent='اطلاعات بارگذاری شد.'; }
+  if (state === 'changed') { dot.className='action-dot changed'; info.textContent='تغییرات ذخیره نشده.'; }
+  if (state === 'saved')   { dot.className='action-dot saved'; info.textContent='ذخیره شد _ سایت به صورت خودکار اپدیت می شود'; }
+  if (state === 'error')   { dot.className='action-dot'; info.textContent='خطا در بارگذاری.'; }
+}
+
+// ── Save Success ──
+function showSaveSuccess(){
+  const el = document.getElementById('saveSuccess');
+  el.classList.add('show');
+}
+function closeSaveSuccess(){
+  const el = document.getElementById('saveSuccess');
+  el.classList.remove('show');
+}
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  const icons = { success: '✓', error: '✗', info: 'ℹ' };
+  document.getElementById('toastIcon').textContent = icons[type] || '✓';
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 4000);
+}
+
+// ── Sidebar / Bottom nav ──
+function scrollToSec(id) {
+  if (id === 'top') { window.scrollTo({top:0,behavior:'smooth'}); return; }
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function setActiveNav(el) {
+  document.querySelectorAll('.bnav-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+}
+
+// ── Close modals on overlay click ──
+document.getElementById('previewModal').addEventListener('click', function(e){ if(e.target===this) closePreview(); });
+document.getElementById('githubModal').addEventListener('click', function(e){ if(e.target===this) closeGithubConfig(); });
+
+// ── Init ──
+if (sessionStorage.getItem('panel_auth') === '1') {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainLayout').style.display = 'flex';
+  document.getElementById('actionBar').style.display = 'flex';
+  loadData();
+}
+</script>
+</body>
+</html>
